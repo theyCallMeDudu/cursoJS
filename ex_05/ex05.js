@@ -128,3 +128,87 @@ var userNameSpace = {
 }
 
 userNameSpace.imprimir_acessos();
+
+////////////////////////////////////////////
+
+// 4) Desafio API
+
+function shuffle(array) {
+    var currentIndex = array.length, temporaryValue, randomIndex;
+  
+    // While there remain elements to shuffle...
+    while (0 !== currentIndex) {
+  
+      // Pick a remaining element...
+      randomIndex = Math.floor(Math.random() * currentIndex);
+      currentIndex -= 1;
+  
+      // And swap it with the current element.
+      temporaryValue = array[currentIndex];
+      array[currentIndex] = array[randomIndex];
+      array[randomIndex] = temporaryValue;
+    }
+  
+    return array;
+}
+
+
+function pegarPergunta(callback){
+    $.ajax({
+        url: "https://opentdb.com/api.php?amount=10&category=11",
+        type: "GET",
+        dataType: "json"}).done(function(data){
+            callback(data.results[0]);
+        }).fail(function(){
+            console.log('Erro na requisição.')
+        });
+}
+
+
+$("#nova_pergunta").click(function(){
+    $("#opcoes").html("");
+    $("#erro_acerto").html("");
+    $("#pergunta").html("");
+    $("#nova_pergunta").hide("");
+    
+    pegarPergunta(gerarPergunta);
+});
+
+
+function gerarPergunta(pergunta){
+    $("#pergunta").html(pergunta.question);
+
+    var resposta_correta = pergunta.correct_answer;
+    var respostas = pergunta.incorrect_answers;
+    respostas.push(resposta_correta);
+    respostas = shuffle(respostas);
+
+    for(a = 0; a < respostas.length; a++){
+        $("#opcoes").append('<input type="radio" name="opcao" value="' + respostas[a] + '">' + respostas[a] + '<br>');
+    }
+
+    $("#opcoes input[name='opcao']").change(function(){
+        $("#submeter").show();
+    });
+
+    $("#submeter").click(function(){
+
+        var resposta_escolhida = $("#opcoes input[name='opcao']:checked").val();
+
+        $("#submeter").hide();
+
+        if(resposta_escolhida == resposta_correta){
+            $("#erro_acerto").html("<span style='color: green; font-weight: bold'>Parabéns, você acertou!<br> A resposta é: " + resposta_correta + "</span>");
+        } else{
+            $("#erro_acerto").html("<span style='color: red; font-weight: bold'>Você errou!<br> A resposta é: " + resposta_correta + "</span>");
+        }
+
+        $("#opcoes input[name='opcao']").attr('disabled', true);
+
+        $("#nova_pergunta").show();
+
+    });
+
+}
+
+pegarPergunta(gerarPergunta);
